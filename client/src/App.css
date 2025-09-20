@@ -353,3 +353,10 @@ a.btn {
     line-height: 1.5;
     margin-top: -0.25rem;
 }
+
+/* --- NEW RESPONSIVE RULE FOR MOBILE --- */
+@media (max-width: 480px) {
+  .setup-description {
+    white-space: normal; /* Allows the text to wrap */
+  }
+}
