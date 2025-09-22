@@ -9,7 +9,18 @@ const JoinPage = () => {
   const { socket } = useQueue();
   const { queue, loading, error } = useQueueData(queueId);
 
+  const unlockAudio = () => {
+    const sound = new Audio('/silence.mp3');
+    sound.play().catch(error => {
+      // This catch is important to prevent errors on browsers that still block it.
+      console.log("Audio unlock failed, but this is expected on some browsers.");
+    });
+  };
+
   const handleJoin = () => {
+    // This is the crucial step: unlock audio on the very first user tap.
+    unlockAudio();
+
     if (socket && queueId) {
       socket.emit('join-queue', { queueId }, (response) => {
         if (response.ticketNumber) {
