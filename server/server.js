@@ -46,7 +46,7 @@ io.on('connection', (socket) => {
       if (!queue) return callback({ error: 'Queue not found' });
       
       const ticketNumber = queue.nextTicket;
-      const newTicket = { ticketNumber, subscription };
+      const newTicket = { ticketNumber, subscription, timeAdjustment: 0 };
       queue.waiting.push(newTicket);
       queue.nextTicket += 1;
       
@@ -109,6 +109,29 @@ io.on('connection', (socket) => {
     queue.nextTicket = newStartNumber;
     const updatedQueue = await queue.save();
     io.to(queueId).emit('queue-updated', updatedQueue);
+  });
+  
+  socket.on('update-estimated-time', async ({ queueId, newTime }) => {
+    const queue = await Queue.findByIdAndUpdate(
+      queueId, 
+      { estimatedTimePerTicket: newTime },
+      { new: true }
+    );
+    if (queue) {
+      io.to(queueId).emit('queue-updated', queue);
+    }
+  });
+
+  socket.on('adjust-ticket-time', async ({ queueId, ticketNumber, adjustment }) => {
+      const queue = await Queue.findById(queueId);
+      if (!queue) return;
+
+      const ticketIndex = queue.waiting.findIndex(t => t.ticketNumber === ticketNumber);
+      if (ticketIndex > -1) {
+          queue.waiting[ticketIndex].timeAdjustment += adjustment;
+          const updatedQueue = await queue.save();
+          io.to(queueId).emit('queue-updated', updatedQueue);
+      }
   });
 
   socket.on('leave-queue-room', (queueId) => {

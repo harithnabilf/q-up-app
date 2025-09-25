@@ -302,6 +302,13 @@ a.btn {
   margin: 0;
 }
 
+.visitor-time-estimate {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #555;
+    margin-top: 1rem;
+}
+
 .header-with-settings {
     display: flex;
     justify-content: center;
@@ -354,9 +361,39 @@ a.btn {
     margin-top: -0.25rem;
 }
 
-/* --- NEW RESPONSIVE RULE FOR MOBILE --- */
+.time-adjuster {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    margin: 0.5rem 0;
+}
+
+.time-adjuster span {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #000;
+    min-width: 80px;
+}
+
+.adjust-btn {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #000;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1;
+}
+
 @media (max-width: 480px) {
   .setup-description {
-    white-space: normal; /* Allows the text to wrap */
+    white-space: normal;
   }
 }
