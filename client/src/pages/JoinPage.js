@@ -36,8 +36,9 @@ const JoinPage = () => {
       <button className="btn btn-primary" onClick={handleJoin} disabled={isSubscribing}>
         {isSubscribing ? 'Joining...' : 'Join'}
       </button>
+      {/* UPDATED: The text has been changed below */}
       <p style={{fontSize: '0.8rem', color: '#666', marginTop: '1rem'}}>
-        You may be asked for permission to show notifications. Please accept to be notified when it's your turn.
+        Please turn up your volume. A 'ding' sound will play when it's your turn!
       </p>
     </div>
   );
