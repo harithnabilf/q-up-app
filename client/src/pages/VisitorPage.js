@@ -5,20 +5,23 @@ import { useQueueData } from '../hooks/useQueueData';
 const VisitorPage = () => {
   const { queueId, ticketNumber } = useParams();
   const { queue, loading, error } = useQueueData(queueId);
-  const isReadyRef = useRef(false);
   
   const myTicket = parseInt(ticketNumber);
+  const audioRef = useRef(null);
+  const hasBeenCalledRef = useRef(false);
 
   useEffect(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio('/notification.mp3');
+    }
+
     if (queue) {
-        const isReady = queue.currentlyServing === myTicket;
-        if (!isReadyRef.current && isReady) {
-            const audio = new Audio('/notification.mp3');
-            audio.play().catch(error => {
-                console.log("Audio playback failed:", error);
-            });
-        }
-        isReadyRef.current = isReady;
+      const isReady = queue.currentlyServing === myTicket;
+      
+      if (isReady && !hasBeenCalledRef.current) {
+        audioRef.current.play().catch(e => console.log("Audio play failed.", e));
+        hasBeenCalledRef.current = true;
+      }
     }
   }, [queue, myTicket]);
 
@@ -26,7 +29,7 @@ const VisitorPage = () => {
   if (error) return <div className="content-wrapper"><h1>Queue not found.</h1></div>;
 
   const isReady = queue.currentlyServing === myTicket;
-  const position = queue.waiting.indexOf(myTicket) + 1;
+  const position = queue.waiting.findIndex(t => t.ticketNumber === myTicket) + 1;
 
   const formatTicket = (num) => `#${String(num).padStart(3, '0')}`;
   
@@ -37,31 +40,35 @@ const VisitorPage = () => {
     return `You are ${pos}th in the queue`;
   };
 
-  if (isReady) {
-    return (
-      <div className="content-wrapper">
+  const renderContent = () => {
+    if (isReady) {
+      return (
         <div className="visitor-circle status-ready">
           <div className="visitor-circle-halo"></div>
           <span className="visitor-ticket-number">{formatTicket(myTicket)}</span>
           <h1 className="visitor-status-heading">It is your turn now!</h1>
         </div>
-      </div>
-    );
-  }
-  
-  if (position > 0) {
-    return (
-      <div className="content-wrapper">
+      );
+    }
+    
+    if (position > 0) {
+      return (
         <div className="visitor-circle status-waiting">
           <div className="visitor-circle-halo"></div>
           <span className="visitor-ticket-number">{formatTicket(myTicket)}</span>
           <h1 className="visitor-status-heading">{getPositionText(position)}</h1>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  return null;
+    return null;
+  };
+
+  return (
+    <div className="content-wrapper">
+      {renderContent()}
+    </div>
+  );
 };
 
 export default VisitorPage;

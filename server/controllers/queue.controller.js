@@ -26,3 +26,10 @@ exports.getQueue = async (req, res) => {
     res.status(500).json({ message: 'Server error', error });
   }
 };
+
+exports.getVapidPublicKey = (req, res) => {
+    if (!process.env.VAPID_PUBLIC_KEY) {
+        return res.status(500).send("VAPID public key not configured.");
+    }
+    res.status(200).send(process.env.VAPID_PUBLIC_KEY);
+};

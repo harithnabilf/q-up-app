@@ -4,19 +4,30 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const webPush = require('web-push');
 const Queue = require('./models/queue.model');
 const queueRoutes = require('./routes/queue.routes');
+
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
+
+webPush.setVapidDetails(
+  `mailto:youremail@example.com`,
+  VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY
+);
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*", 
+    origin: CLIENT_URL,
     methods: ["GET", "POST"]
   }
 });
 
-app.use(cors());
+app.use(cors({ origin: CLIENT_URL }));
 app.use(express.json());
 app.use('/api/queues', queueRoutes);
 
@@ -29,13 +40,14 @@ io.on('connection', (socket) => {
     socket.join(queueId);
   });
 
-  socket.on('join-queue', async ({ queueId }, callback) => {
+  socket.on('join-queue', async ({ queueId, subscription }, callback) => {
     try {
       const queue = await Queue.findById(queueId);
       if (!queue) return callback({ error: 'Queue not found' });
       
       const ticketNumber = queue.nextTicket;
-      queue.waiting.push(ticketNumber);
+      const newTicket = { ticketNumber, subscription };
+      queue.waiting.push(newTicket);
       queue.nextTicket += 1;
       
       const updatedQueue = await queue.save();
@@ -50,17 +62,29 @@ io.on('connection', (socket) => {
     const queue = await Queue.findById(queueId);
     if (!queue) return;
 
+    const ticketToCall = queue.waiting.find(t => t.ticketNumber === ticketNumber);
+
     queue.currentlyServing = ticketNumber;
-    queue.waiting = queue.waiting.filter(num => num !== ticketNumber);
+    queue.waiting = queue.waiting.filter(t => t.ticketNumber !== ticketNumber);
 
     const updatedQueue = await queue.save();
     io.to(queueId).emit('queue-updated', updatedQueue);
+
+    if (ticketToCall && ticketToCall.subscription) {
+      const payload = JSON.stringify({
+        title: 'It\'s your turn!',
+        body: `Your number, #${String(ticketNumber).padStart(3, '0')}, is now being served.`,
+        icon: '/logo192.png',
+      });
+      webPush.sendNotification(ticketToCall.subscription, payload)
+        .catch(err => console.error("Error sending notification, subscription probably expired.", err.body));
+    }
   };
 
   socket.on('call-next', async ({ queueId }) => {
     const queue = await Queue.findById(queueId);
     if (queue && queue.waiting.length > 0) {
-      const nextTicket = queue.waiting[0];
+      const nextTicket = queue.waiting[0].ticketNumber;
       handleCall(queueId, nextTicket);
     }
   });
@@ -73,7 +97,7 @@ io.on('connection', (socket) => {
     const queue = await Queue.findById(queueId);
     if (!queue) return;
 
-    queue.waiting = queue.waiting.filter(num => num !== ticketNumber);
+    queue.waiting = queue.waiting.filter(t => t.ticketNumber !== ticketNumber);
     const updatedQueue = await queue.save();
     io.to(queueId).emit('queue-updated', updatedQueue);
   });
