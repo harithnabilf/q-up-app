@@ -1,24 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useQueueData } from '../hooks/useQueueData'; // Import the correct data hook
+import { useQueueData } from '../hooks/useQueueData';
 import QRCode from 'qrcode';
 
-const QrIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="7" height="7"></rect>
-    <rect x="14" y="3" width="7" height="7"></rect>
-    <rect x="3" y="14" width="7" height="7"></rect>
-    <line x1="14" y1="14" x2="14" y2="14.01"></line>
-    <line x1="17.5" y1="14" x2="17.5" y2="21"></line>
-    <line x1="21" y1="17.5" x2="14" y2="17.5"></line>
-    <line x1="21" y1="21" x2="21" y2="21.01"></line>
-  </svg>
+const DownloadIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+    </svg>
+);
+
+const SettingsIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33-1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
 );
 
 const ConfirmationPage = () => {
   const { queueId } = useParams();
-  // Use the new hook to fetch data for this specific queue
   const { queue, loading, error } = useQueueData(queueId);
+  const [showTestModal, setShowTestModal] = useState(false);
 
   const visitorUrl = `${window.location.origin}/queue/${queueId}`;
   const adminUrl = `${window.location.origin}/admin/${queueId}`;
@@ -82,34 +85,55 @@ const ConfirmationPage = () => {
   if (error) return <div className="content-wrapper"><h1>Queue not found.</h1></div>;
 
   return (
-    <div className="content-wrapper">
-       <img src="/logo.png" alt="Q-Up Logo" className="logo-image" />
-      <h1>Done! Your queue is ready.</h1>
-      {queue && <h2>"{queue.name}"</h2>}
-      
-      <div className="confirmation-section">
-        <div className="button-group">
-          <a href={visitorUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-grow">
-            Join Queue
-          </a>
-          <button className="btn btn-secondary btn-icon" onClick={downloadQRCode} aria-label="Download QR Code">
-            <QrIcon />
-          </button>
+    <>
+      {showTestModal && (
+        <div className="modal-overlay" onClick={() => setShowTestModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <button className="modal-close-btn" onClick={() => setShowTestModal(false)}>&times;</button>
+                <h2>Test Queue</h2>
+                <p className="form-group-description">
+                    Click the button below to open a new tab and join the queue as a visitor.
+                </p>
+                <div className="modal-btn-group">
+                    <a href={visitorUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+                        Join Queue
+                    </a>
+                </div>
+            </div>
         </div>
-        <p className="confirmation-description">
-            Click 'Join Queue' to test it yourself. Download the QR code to print and display for your visitors.
-        </p>
-      </div>
+      )}
 
-      <div className="confirmation-section">
-        <a href={adminUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
-          Admin Dashboard
-        </a>
-        <p className="confirmation-description">
-            Click here to open the dashboard where you will manage the queue.
-        </p>
+      <div className="content-wrapper">
+        <div className="confirmation-header">
+            <img src="/logo.png" alt="Q-Up Logo" className="logo-image" />
+             <button className="btn-icon-link" onClick={() => setShowTestModal(true)} aria-label="Open Test Options">
+                <SettingsIcon />
+            </button>
+        </div>
+
+        <h1>Done! Your queue is ready.</h1>
+        {queue && <h2>"{queue.name}"</h2>}
+        
+        <div className="confirmation-section">
+          <a href={adminUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+            Admin Dashboard
+          </a>
+          <p className="confirmation-description">
+              Click here to open the dashboard where you will manage the queue.
+          </p>
+        </div>
+
+        <div className="confirmation-section">
+          <button className="btn btn-secondary btn-with-icon" onClick={downloadQRCode}>
+            <DownloadIcon />
+            Download QR Code
+          </button>
+           <p className="confirmation-description">
+              Download the QR code to print and display for your visitors.
+          </p>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

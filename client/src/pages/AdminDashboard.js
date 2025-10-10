@@ -4,9 +4,9 @@ import { useQueue } from '../hooks/useQueue';
 import { useQueueData } from '../hooks/useQueueData';
 
 const SettingsIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="3"></circle>
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33-1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
     </svg>
 );
 
@@ -24,17 +24,18 @@ const AdminDashboard = () => {
     if (queue) {
       setNextTicketInput(queue.nextTicket);
       setEstimatedTimeInput(queue.estimatedTimePerTicket);
-      if (queue.estimatedTimePerTicket === 0) {
+      if (queue.estimatedTimePerTicket === 0 && !loading) {
         setShowSettingsModal(true);
       }
     }
-  }, [queue]);
+  }, [queue, loading]);
 
   if (loading) return <div className="content-wrapper"><h1>Loading Queue...</h1></div>;
   if (error) return <div className="content-wrapper"><h1>Queue not found.</h1></div>;
 
   const formatTicket = (num) => String(num).padStart(3, '0');
   const nextSequential = queue.waiting.length > 0 ? queue.waiting[0].ticketNumber : null;
+  const currentModalTicketData = modalTicket ? queue.waiting.find(t => t.ticketNumber === modalTicket.ticketNumber) || modalTicket : null;
 
   const handleCall = () => {
     socket.emit('call-specific', { queueId, ticketNumber: modalTicket.ticketNumber });
@@ -68,17 +69,17 @@ const AdminDashboard = () => {
 
   return (
     <>
-      {modalTicket && (
+      {currentModalTicketData && (
         <div className="modal-overlay" onClick={() => setModalTicket(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close-btn" onClick={() => setModalTicket(null)}>&times;</button>
-            <h2 className="modal-ticket-number">#{formatTicket(modalTicket.ticketNumber)}</h2>
+            <h2 className="modal-ticket-number">#{formatTicket(currentModalTicketData.ticketNumber)}</h2>
             
             <div className="form-group">
                 <label>Adjust Time</label>
                 <div className="time-adjuster">
                     <button onClick={() => handleTimeAdjust(-5)} className="adjust-btn">-</button>
-                    <span>{queue.estimatedTimePerTicket + modalTicket.timeAdjustment} min</span>
+                    <span>{queue.estimatedTimePerTicket + currentModalTicketData.timeAdjustment} min</span>
                     <button onClick={() => handleTimeAdjust(5)} className="adjust-btn">+</button>
                 </div>
             </div>
@@ -99,7 +100,7 @@ const AdminDashboard = () => {
                 <div className="form-group">
                     <label htmlFor="next-ticket-input">Set Next Ticket Number</label>
                     <p className="form-group-description">
-                        This will be the number assigned to the next customer who joins the queue.
+                        This will be the number assigned to the next visitor who joins the queue.
                     </p>
                     <input 
                         id="next-ticket-input"
@@ -112,6 +113,9 @@ const AdminDashboard = () => {
                 </div>
                  <div className="form-group">
                     <label htmlFor="est-time-input">Estimated Time Per Ticket (minutes)</label>
+                    <p className="form-group-description">
+                        Set a default wait time for each spot in the queue.
+                    </p>
                     <input 
                         id="est-time-input"
                         type="number"
