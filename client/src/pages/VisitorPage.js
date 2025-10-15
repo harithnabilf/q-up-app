@@ -2,6 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQueueData } from '../hooks/useQueueData';
 
+const LocationIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+    <circle cx="12" cy="10" r="3"></circle>
+  </svg>
+);
+
 const VisitorPage = () => {
   const { queueId, ticketNumber } = useParams();
   const { queue, loading, error } = useQueueData(queueId);
@@ -84,7 +91,12 @@ const VisitorPage = () => {
           <div className="visitor-circle-halo"></div>
           <span className="visitor-ticket-number">{formatTicket(myTicket)}</span>
           <h1 className="visitor-status-heading">{getPositionText(position)}</h1>
-          {timeLeft > 0 && <span className="visitor-time-estimate">~{formatTime(timeLeft)}</span>}
+          {timeLeft > 0 && (
+            <div className="visitor-time-container">
+              <span className="visitor-time-label">Waiting time is</span>
+              <span className="visitor-time-estimate">≈{formatTime(timeLeft)}</span>
+            </div>
+          )}
         </div>
       );
     }
@@ -93,6 +105,10 @@ const VisitorPage = () => {
 
   return (
     <div className="content-wrapper">
+      <div className="visitor-header">
+        <LocationIcon />
+        <span className="visitor-header-name">{queue.name}</span>
+      </div>
       {renderContent()}
     </div>
   );
