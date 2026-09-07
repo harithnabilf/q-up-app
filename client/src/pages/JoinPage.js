@@ -27,7 +27,19 @@ const JoinPage = () => {
     }
   };
 
-  if (loading) return <div className="content-wrapper"><h1>Loading...</h1></div>;
+  if (loading) {
+    return (
+      <div className="content-wrapper">
+        <div className="loading-container" style={{ marginTop: '2rem' }}>
+          <div className="spinner"></div>
+          <p className="loading-title">Connecting to queue...</p>
+          <p className="loading-subtext">
+            If the server was idle, Render's free tier may take 1–2 minutes to wake up.
+          </p>
+        </div>
+      </div>
+    );
+  }
   if (error) return <div className="content-wrapper"><h1>Queue not found.</h1></div>;
 
   return (
